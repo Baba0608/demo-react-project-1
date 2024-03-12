@@ -2,15 +2,15 @@ const tables = ["Table 1", "Table 2", "Table 3"];
 
 import { Table } from "./Table";
 
-export const TablesContainer = ({ orders, removeFromOrders }) => {
+export const TablesContainer = ({ orders, dispatchTableOrders }) => {
   return (
     <div>
-      {tables.map((table, index) => (
+      {tables.map((table) => (
         <Table
           table={table}
-          tableOrders={orders[index]}
+          tableOrders={orders[table]}
           key={table}
-          removeFromOrders={removeFromOrders}
+          dispatchTableOrders={dispatchTableOrders}
         />
       ))}
     </div>

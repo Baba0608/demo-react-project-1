@@ -1,33 +1,41 @@
-import { useState } from "react";
+import { useState, useReducer } from "react";
 import { v4 as uuid } from "uuid";
 
 import { TablesContainer } from "./TablesContainer";
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "add-order":
+      return {
+        ...state,
+        [action.table]: [...state[action.table], action.payload.obj],
+      };
+
+    case "remove-order":
+      const filteredOrders = state[action.table].filter(
+        (order) => order.uniqueId != action.payload.id
+      );
+
+      return {
+        ...state,
+        [action.table]: filteredOrders,
+      };
+
+    default:
+      return state;
+  }
+}
 
 export const Menu = () => {
   const [item, setItem] = useState("Chicken Biriyani");
   const [price, setPrice] = useState("");
   const [orderedTable, setOrderedTable] = useState("Table 1");
 
-  const [table1, setTable1] = useState([]);
-  const [table2, setTable2] = useState([]);
-  const [table3, setTable3] = useState([]);
-
-  const removeFromOrders = (uniqueId) => {
-    const t1 = table1.filter((order) => {
-      return order.uniqueId != uniqueId;
-    });
-    setTable1(t1);
-
-    const t2 = table2.filter((order) => {
-      return order.uniqueId != uniqueId;
-    });
-    setTable2(t2);
-
-    const t3 = table3.filter((order) => {
-      return order.uniqueId != uniqueId;
-    });
-    setTable3(t3);
-  };
+  const [tableOrders, dispatchTableOrders] = useReducer(reducer, {
+    "Table 1": [],
+    "Table 2": [],
+    "Table 3": [],
+  });
 
   return (
     <div>
@@ -50,6 +58,7 @@ export const Menu = () => {
           <label htmlFor="price">Price: </label>
           <input
             id="price"
+            value={price}
             onChange={(e) => {
               setPrice(e.target.value);
             }}
@@ -74,17 +83,17 @@ export const Menu = () => {
         <div className="mx-4 my-2">
           <button
             className="bg-blue-300 px-4 py-1 rounded-md hover:bg-blue-400"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               const uniqueId = uuid();
               const obj = { item: item, price: price, uniqueId: uniqueId };
               localStorage.setItem(uniqueId, JSON.stringify(obj));
-              if (orderedTable === "Table 1") {
-                setTable1([...table1, obj]);
-              } else if (orderedTable === "Table 2") {
-                setTable2([...table2, obj]);
-              } else if (orderedTable === "Table 3") {
-                setTable3([...table3, obj]);
-              }
+              dispatchTableOrders({
+                type: "add-order",
+                table: orderedTable,
+                payload: { obj: obj },
+              });
+              setPrice("");
             }}
           >
             Add to bill
@@ -93,8 +102,8 @@ export const Menu = () => {
       </div>
 
       <TablesContainer
-        orders={[table1, table2, table3]}
-        removeFromOrders={removeFromOrders}
+        orders={tableOrders}
+        dispatchTableOrders={dispatchTableOrders}
       />
     </div>
   );
